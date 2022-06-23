@@ -1,0 +1,84 @@
+- hosts: webservers
+  become: true
+  tasks:
+
+  - name: "apt update"
+    apt:
+      update_cache: yes
+      cache_valid_time: 3600
+
+  - name: "install nginx"
+    apt:
+      name: ['nginx']
+      state: latest
+
+  - name: copy nginx configuration file
+    template:
+      src: nginx.conf.j2
+      dest: /etc/nginx/sites-enabled/default
+      owner: root
+      group: root
+      mode: '0644'
+    notify: restart nginx
+
+  #- name: download and install node 14
+  #  shell: "curl -sL https://deb.nodesource.com/setup_14.x | bash -"
+
+  - name: download node 14 package
+    get_url:
+      url: https://deb.nodesource.com/setup_14.x
+      #validate_certs: false
+      dest: "/home/adminos/install.sh"
+      mode: 0755
+
+  - name: install downloaded node 14 package
+    command: "/home/adminos/install.sh && rm /home/adminos/install.sh"
+
+  - name: "download and install build-essential package (supporting nodejs)"
+    apt:
+      name: ['build-essential']
+      state: latest
+
+  - name: "download and install nodejs dependencies"
+    apt:
+      name: ['nodejs']
+      state: latest
+
+  - name: "download and install pm2 package globally"
+    npm:
+      name: pm2
+      global: yes
+
+  - name: download the weight tracking app from the github repository
+    git:
+        repo: https://github.com/sagia91/bootcamp-app.git
+        dest: "/home/adminos/bootcamp-app/"
+
+  - name: download and install weight tracking app dependencies
+    npm:
+      path: /home/adminos/bootcamp-app/
+
+  - name: copy .env file
+    template:
+      src: env.j2
+      dest: /home/adminos/bootcamp-app/.env
+      owner: root
+      group: root
+      mode: '0644'
+
+  - name: run the db init script
+    command: "npm run initdb"
+    args:
+      chdir: /home/adminos/bootcamp-app/
+
+  - name: make pm2 load at startup
+    shell: "sudo env PATH=$PATH:/usr/bin /usr/lib/node_modules/pm2/bin/pm2 startup systemd -u adminos --hp /home/adminos"
+
+  - name: run the app (using pm2)
+    command: "pm2 start /home/adminos/bootcamp-app/"
+
+  handlers:
+    - name: restart nginx
+      service:
+        name: nginx
+        state: restarted
