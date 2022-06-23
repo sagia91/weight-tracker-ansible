@@ -1,6 +1,6 @@
 [all:vars]
-ansible_ssh_user=adminos
-ansible_password=P@V4V3ffff342231A
+ansible_ssh_user
+ansible_password
 
 [webservers]
 52.191.11.43

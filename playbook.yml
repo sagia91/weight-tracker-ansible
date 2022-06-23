@@ -20,19 +20,15 @@
       group: root
       mode: '0644'
     notify: restart nginx
-
-  #- name: download and install node 14
-  #  shell: "curl -sL https://deb.nodesource.com/setup_14.x | bash -"
-
+    
   - name: download node 14 package
     get_url:
       url: https://deb.nodesource.com/setup_14.x
-      #validate_certs: false
-      dest: "/home/adminos/install.sh"
+      dest: "/home/adminos/installnode.sh"
       mode: 0755
 
   - name: install downloaded node 14 package
-    command: "/home/adminos/install.sh && rm /home/adminos/install.sh"
+    shell: "/home/adminos/installnode.sh && rm /home/adminos/installnode.sh"
 
   - name: "download and install build-essential package (supporting nodejs)"
     apt:
