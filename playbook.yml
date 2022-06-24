@@ -1,6 +1,6 @@
 - hosts: webservers
   become: true
-  become_user: root
+  become_user: "{{ ansible_ssh_user }}"
 
   vars_prompt:
   
@@ -72,16 +72,22 @@
 
   - name: run db init script
     command: "npm run initdb"
+    run_once: true
     args:
       chdir: "{{ home_dir }}/bootcamp-app/"
 
   - name: make pm2 load at startup
-    shell: "sudo env PATH=$PATH:/usr/bin /usr/lib/node_modules/pm2/bin/pm2 startup systemd -u adminos --hp {{ home_dir }}"
+    shell: "sudo env PATH=$PATH:/usr/bin /usr/lib/node_modules/pm2/bin/pm2 startup systemd -u {{ ansible_ssh_user }} --hp {{ home_dir }}"
 
   - name: run the app (using pm2)
-    shell: "pm2 start ."
+    command: pm2 start .
     args:
       chdir: "{{ home_dir }}/bootcamp-app/"
+
+  - name: reload pm2 processes
+    command: pm2 reload all
+    environment:
+      PATH: /home/ubuntu/.nvm/versions/node/v12.10.0/bin:/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin
 
   handlers:
     - name: restart nginx
