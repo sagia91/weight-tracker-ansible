@@ -70,7 +70,7 @@
       group: root
       mode: '0644'
 
-  - name: run the db init script
+  - name: run db init script
     command: "npm run initdb"
     args:
       chdir: "{{ home_dir }}/bootcamp-app/"
@@ -79,7 +79,7 @@
     shell: "sudo env PATH=$PATH:/usr/bin /usr/lib/node_modules/pm2/bin/pm2 startup systemd -u adminos --hp {{ home_dir }}"
 
   - name: run the app (using pm2)
-    command: "pm2 start ."
+    shell: "pm2 start ."
     args:
       chdir: "{{ home_dir }}/bootcamp-app/"
 
