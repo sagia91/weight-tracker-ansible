@@ -79,7 +79,9 @@
     shell: "sudo env PATH=$PATH:/usr/bin /usr/lib/node_modules/pm2/bin/pm2 startup systemd -u adminos --hp {{ home_dir }}"
 
   - name: run the app (using pm2)
-    command: "pm2 start {{ home_dir }}/bootcamp-app/"
+    command: "pm2 start ."
+    args:
+      chdir: "{{ home_dir }}/bootcamp-app/"
 
   handlers:
     - name: restart nginx
