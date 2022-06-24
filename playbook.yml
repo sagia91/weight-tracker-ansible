@@ -1,5 +1,13 @@
 - hosts: webservers
   become: true
+  become_user: root
+
+  vars_prompt:
+  
+  - name: env_file_location
+    prompt: "enter local path to the .env file"
+    private: false
+
   tasks:
 
   - name: "apt update"
@@ -28,7 +36,7 @@
       mode: 0755
 
   - name: install downloaded node 14 package
-    shell: "/home/adminos/installnode.sh && rm /home/adminos/installnode.sh"
+    shell: "{{ home_dir }}/installnode.sh && rm {{ home_dir }}/installnode.sh"
 
   - name: "download and install build-essential package (supporting nodejs)"
     apt:
@@ -48,16 +56,16 @@
   - name: download the weight tracking app from the github repository
     git:
         repo: https://github.com/sagia91/bootcamp-app.git
-        dest: "/home/adminos/bootcamp-app/"
+        dest: "{{ home_dir }}/bootcamp-app/"
 
   - name: download and install weight tracking app dependencies
     npm:
-      path: /home/adminos/bootcamp-app/
+      path: "{{ home_dir }}/bootcamp-app/"
 
   - name: copy .env file
     template:
-      src: env.j2
-      dest: /home/adminos/bootcamp-app/.env
+      src: "{{ env_file_location }}"
+      dest: "{{ home_dir }}/bootcamp-app/.env"
       owner: root
       group: root
       mode: '0644'
@@ -65,13 +73,13 @@
   - name: run the db init script
     command: "npm run initdb"
     args:
-      chdir: /home/adminos/bootcamp-app/
+      chdir: "{{ home_dir }}/bootcamp-app/"
 
   - name: make pm2 load at startup
-    shell: "sudo env PATH=$PATH:/usr/bin /usr/lib/node_modules/pm2/bin/pm2 startup systemd -u adminos --hp /home/adminos"
+    shell: "sudo env PATH=$PATH:/usr/bin /usr/lib/node_modules/pm2/bin/pm2 startup systemd -u adminos --hp {{ home_dir }}"
 
   - name: run the app (using pm2)
-    command: "pm2 start /home/adminos/bootcamp-app/"
+    command: "pm2 start {{ home_dir }}/bootcamp-app/"
 
   handlers:
     - name: restart nginx
